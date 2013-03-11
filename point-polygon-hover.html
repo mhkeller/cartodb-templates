@@ -159,21 +159,6 @@
         }
 
 
-        // Point variables and functions
-
-
-        function drawHoverPoint(data){
-            removePoint();
-
-            point = new L.GeoJSON(JSON.parse(data.geometry),{
-                pointToLayer: function(feature,latlng) {
-                    return new L.CircleMarker(latlng, point_style);
-                }
-            }).addTo(map);
-
-        }
-
-
     }).call(this);
 
   </script>
