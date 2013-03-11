@@ -94,6 +94,11 @@
             polygon.cartodb_id = null;
         }
 
+        var $map_canvas = $('#map-canvas');
+        $map_canvas.mouseleave(function(e){
+            removePolygon();
+        })
+
     }).call(this);
 
   </script>

@@ -158,6 +158,12 @@
 
         }
 
+        var $map_canvas = $('#map-canvas');
+        $map_canvas.mouseleave(function(e){
+            removeAllHoverShapes();
+        })
+
+
 
     }).call(this);
 
