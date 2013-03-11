@@ -44,7 +44,7 @@
     <div class="hover-window"></div>
 
     <script type="text/jst" id="polygon-hover-templ">
-        <div><%= makeUppercase(state_name) %></div>
+        <div><%= makeBold(state_name) %></div>
     </script>
 
 
@@ -127,8 +127,8 @@
 
         var formatHelpers = {
             // Put custom functions in here as a go-between your data and how it should display as text in your hover window
-            makeUppercase: function(text){
-                return text.toUpperCase()
+            makeBold: function(text){
+                return '<strong>' + text + '</strong>'
             }
         }
 
