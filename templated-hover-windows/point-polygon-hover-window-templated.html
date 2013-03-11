@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CartoDB Leaflet - Polygon hover template</title>
+
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      .hover-window{
+        position:absolute;
+        width:150px;
+        font-family: Helvetica,sans-serif;
+        font-size:12px;
+        text-align: center;
+        padding:5px;
+        background-color:rgb(255,255,255);
+        background-color:rgba(255,255,255,.85);
+        border-radius: 2px;
+        -moz-border-radius: 2px;
+        -webkit-border-radius: 2px;
+        behavior: url(border-radius.htc);
+        z-index:99999;
+        display: none;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+      .secondary-hover-style{
+        color:white;
+        background-color:rgb(0,0,0);
+        background-color:rgba(0,0,0,.85);
+      }
+    </style>
+
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+</head>
+<body>
+    <div id="map-canvas"></div>
+    <!-- Hover window -->
+    <div class="hover-window"></div>
+
+    <!-- The polygon hover template -->
+    <script type="text/jst" id="polygon-hover-templ">
+        <div><%= state_name %></div>
+    </script>
+
+    <!-- The point hover template -->
+    <script type="text/jst" id="point-hover-templ">
+        <div><%= makeBold(name) %></div>
+    </script>
+
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v2/cartodb.js"></script>
+    <script>
+
+    (function(){
+
+        var map = L.map('map-canvas', {
+            center: [38.651198,-98.920898],
+            zoom: 3
+        })
+
+        L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
+            attribution: 'MapBox'
+        }).addTo(map);
+
+        /* CREATE THE POLYGON LAYER */
+        cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_states/viz.json', {
+            // To make more simplified hover polygons (faster load time), decrease the .01
+            query: 'select  *, ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry from {{table_name}}',
+            interactivity: 'cartodb_id, geometry, state_name'
+        })
+            .on('done', function(layer) {
+                map.addLayer(layer);
+
+            layer.on('featureOver', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','pointer')
+                if (data.cartodb_id != polygon.cartodb_id) {
+                    drawAppropriatePolygon('polygon', data);
+                }
+                // cartodb.log.log(e, pos, latlng, data);
+            });
+
+            layer.on('featureOut', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','default')
+                removeAllHoverShapes();
+                hideHoverWindow();
+            });
+
+            layer.on('error', function(err) {
+                // cartodb.log.log('error: ' + err);
+            });
+
+        }).on('error', function() {
+            // cartodb.log.log("some error occurred");
+        });
+
+
+
+        /* CREATE THE POINT LAYER */
+        cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_cities_100k/viz.json', {
+            // To make more simplified hover polygons (faster load time), decrease the .01
+            query: 'select  *, ST_AsGeoJSON(the_geom) as geometry from {{table_name}}',
+            interactivity: 'cartodb_id, geometry, name'
+        })
+            .on('done', function(layer) {
+                map.addLayer(layer);
+
+            layer.on('featureOver', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','pointer')
+                if (data.cartodb_id != point.cartodb_id) {
+                    drawAppropriatePolygon('point', data);
+                }
+                // cartodb.log.log(pos, data);
+            });
+
+            layer.on('featureOut', function(e, pos, latlng, data) {
+                // $('.leaflet-container').css('cursor','default')
+                removePoint();
+            });
+
+            layer.on('error', function(err) {
+                cartodb.log.log('error: ' + err);
+            });
+
+        }).on('error', function() {
+            // cartodb.log.log("some error occurred");
+        });
+
+
+        // Polygon variables and functions
+        var polygon = {};
+        var point = {};
+
+        // What should our hover style look like?
+        var polygon_style = {
+            color: "white",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: .45,
+            fillColor: "white",
+            clickable: false
+        }
+
+        // What should our hover style look like?
+        var point_style = {
+            radius: 5,
+            color: "#333",
+            weight: 2,
+            opacity: 1,
+            fillColor: "#FFCC00",
+            fillOpacity: 1,
+            clickable: false
+        }
+
+        function drawAppropriatePolygon(shape, data){
+            removeAllHoverShapes();
+
+            if (shape == 'polygon'){
+                polygon = new L.GeoJSON(JSON.parse(data.geometry), {
+                    style: polygon_style
+                }).addTo(map);
+                polygon.cartodb_id = data.cartodb_id;
+
+                fillPolygonHoverWindow(data);
+            }else{
+                removeAllHoverShapes();
+
+                point = new L.GeoJSON(JSON.parse(data.geometry),{
+                    pointToLayer: function(feature,latlng) {
+                        return new L.CircleMarker(latlng, point_style);
+                    }
+                }).addTo(map);
+
+                fillPointHoverWindow(data);
+
+            }
+        }
+
+        function removeAllHoverShapes(){
+            map.removeLayer(polygon);
+            polygon.cartodb_id = null;
+
+            map.removeLayer(point);
+            point.cartodb_id = null;
+        }
+
+        function removePoint(){
+            map.removeLayer(point);
+            point.cartodb_id = null;
+
+        }
+
+        /* HOVER WINDOW BEHAVIOR */
+        var $map_canvas = $('#map-canvas');
+        var $hover_window = $('.hover-window');
+
+
+        var formatHelpers = {
+            // Put custom functions in here as a go-between your data and how it should display as text in your hover window
+            makeBold: function(text){
+                return '<strong>' + text + '</strong>'
+            }
+        }
+
+
+        // Underscore templating
+        var polygon_hover_template = $('#polygon-hover-templ').html();
+        var polygon_hover_template_factory = _.template(polygon_hover_template);
+
+        var point_hover_template = $('#point-hover-templ').html();
+        var point_hover_template_factory = _.template(point_hover_template);
+
+
+        function fillPolygonHoverWindow(data){
+            _.extend(data, formatHelpers)
+            // What do you want to show in your hover window?
+            // You need to put the column headers in the 'interactivity' param in createLayer, in this case, the state name: state_name
+            var content = polygon_hover_template_factory(data);
+            $hover_window.html(content);
+            $hover_window.removeClass('secondary-hover-style');
+            $hover_window.show();
+        }
+
+        function fillPointHoverWindow(data){
+            _.extend(data, formatHelpers)
+            // What do you want to show in your hover window?
+            // You need to put the column headers in the 'interactivity' param in createLayer, in this case, the city name: name
+
+            var content = point_hover_template_factory(data);
+            $hover_window.html(content);
+            $hover_window.addClass('secondary-hover-style');
+            $hover_window.show();
+        }
+
+
+        function hideHoverWindow(data){
+            $hover_window.hide();
+        }
+
+        $map_canvas.mouseleave(function(e){
+            hideHoverWindow();
+            removeAllHoverShapes();
+        })
+
+        $map_canvas.mousemove(function(e){
+            var xOffset = e.pageX
+              , yOffset = e.pageY
+              , xBuffer = 10
+              , yBuffer = 50
+
+              , hover_window_height = $hover_window.outerHeight()
+              , hover_window_width = $hover_window.outerWidth()
+
+              , map_canvas_height = $map_canvas.outerHeight()
+              , map_canvas_width = $map_canvas.outerWidth()
+
+              , map_canvas_offset_left = $map_canvas.offset().left
+              , map_canvas_offset_top = $map_canvas.offset().top;
+
+            // If it goes against the left wall
+            if (xOffset < map_canvas_offset_left  + hover_window_width/2 + xBuffer){
+              $hover_window.css({
+                'top': yOffset + yBuffer,
+                'left': xBuffer
+              });
+            }// If it goes against the right wall
+            else if(xOffset > map_canvas_width - hover_window_width/2 - xBuffer){
+              $hover_window.css({
+                'top': yOffset + yBuffer,
+                'left': map_canvas_width - hover_window_width - xBuffer
+              });
+            }// If it goes against the bottom
+            else if(yOffset > map_canvas_height - hover_window_height - yBuffer){
+              $hover_window.css({
+                'top': yOffset - yBuffer/2 - hover_window_height,
+                'left': xOffset - hover_window_width/2
+              });
+            }else{
+              $hover_window.css({
+                'top': yOffset + yBuffer,
+                'left': xOffset - hover_window_width/2
+              });
+            }
+        });
+
+
+    }).call(this);
+
+  </script>
+
+</body>
+</html>
