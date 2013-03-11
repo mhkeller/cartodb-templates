@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CartoDB Leaflet - Polygon hover template</title>
+
+
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
+
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+</head>
+<body>
+    <div id="map-canvas"></div>
+
+
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v2/cartodb.js"></script>
+    <script>
+
+    (function(){
+
+        var map = L.map('map-canvas', {
+            center: [38.651198,-98.920898],
+            zoom: 3
+        })
+
+        L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
+            attribution: 'MapBox'
+        }).addTo(map);
+
+        cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_cities_100k/viz.json', {
+            // To make more simplified hover polygons (faster load time), decrease the .01
+            query: 'select  *, ST_AsGeoJSON(the_geom) as geometry from {{table_name}}',
+            interactivity: 'cartodb_id, geometry'
+        })
+            .on('done', function(layer) {
+                map.addLayer(layer);
+
+            layer.on('featureOver', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','pointer')
+                if (data.cartodb_id != point.cartodb_id) {
+                    drawHoverPoint(data);
+                }
+                // cartodb.log.log(pos, data);
+            });
+
+            layer.on('featureOut', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','default')
+                removePoint();
+            });
+
+            layer.on('error', function(err) {
+                // cartodb.log.log('error: ' + err);
+            });
+
+        }).on('error', function() {
+            // cartodb.log.log("some error occurred");
+        });
+
+
+
+        var point = {};
+
+        // What should our hover style look like?
+        var point_style = {
+            radius: 5,
+            color: "#333",
+            weight: 2,
+            opacity: 1,
+            fillColor: "#FFCC00",
+            fillOpacity: 1,
+            clickable: false
+        }
+
+        function drawHoverPoint(data){
+            removePoint();
+
+            point = new L.GeoJSON(JSON.parse(data.geometry),{
+                pointToLayer: function(feature,latlng) {
+                    return new L.CircleMarker(latlng, point_style);
+                }
+            }).addTo(map);
+
+        }
+
+        function removePoint(){
+            map.removeLayer(point);
+            point.cartodb_id = null;
+        }
+
+    }).call(this);
+
+  </script>
+
+</body>
+</html>
