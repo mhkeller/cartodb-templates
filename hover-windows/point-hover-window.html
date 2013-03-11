@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CartoDB Leaflet - Polygon hover template</title>
+    <title>CartoDB Leaflet template - @mhkeller</title>
 
 
     <style>
@@ -52,7 +52,8 @@
         var map = L.map('map-canvas', {
             center: [38.651198,-98.920898],
             zoom: 3
-        })
+        });
+        map.scrollWheelZoom.disable();
 
         L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
             attribution: 'MapBox'

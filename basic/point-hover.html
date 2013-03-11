@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CartoDB Leaflet - Polygon hover template</title>
-
+    <title>CartoDB Leaflet template - @mhkeller</title>
 
     <style>
       html, body, #map-canvas {
@@ -14,7 +13,6 @@
 
 
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
-
     <!--[if lte IE 8]>
         <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
     <![endif]-->
@@ -32,7 +30,8 @@
         var map = L.map('map-canvas', {
             center: [38.651198,-98.920898],
             zoom: 3
-        })
+        });
+        map.scrollWheelZoom.disable();
 
         L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
             attribution: 'MapBox'
