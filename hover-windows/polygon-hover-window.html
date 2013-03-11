@@ -119,6 +119,11 @@
             polygon.cartodb_id = null;
         };
 
+
+        /* HOVER WINDOW BEHAVIOR */
+        var $map_canvas = $('#map-canvas');
+        var $hover_window = $('.hover-window');
+
         function fillHoverWindow(data){
             // What do you want to show in your hover window?
             // You need to put the column headers in the 'interactivity' param in createLayer, in this case: state_name
@@ -126,11 +131,6 @@
             $hover_window.html(content)
             $hover_window.show();
         }
-
-        /* HOVER WINDOW BEHAVIOR */
-        var $map_canvas = $('#map-canvas');
-        var $hover_window = $('.hover-window');
-
 
         function hideHoverWindow(data){
             $hover_window.hide();
