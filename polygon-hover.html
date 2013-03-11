@@ -46,7 +46,7 @@
                 map.addLayer(layer);
 
             layer.on('featureOver', function(e, pos, latlng, data) {
-                document.body.style.cursor = "pointer";
+                $('.leaflet-container').css('cursor','pointer')
                 if (data.cartodb_id != polygon.cartodb_id) {
                     drawHoverPolygon(data);
                 }
@@ -54,6 +54,7 @@
             });
 
             layer.on('featureOut', function(e, pos, latlng, data) {
+                $('.leaflet-container').css('cursor','default')
                 removePolygon();
             });
 
