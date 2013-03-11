@@ -84,18 +84,12 @@
 
         function drawHoverPoint(data){
             removePoint();
-            // document.body.style.cursor = "hand";
-            // document.body.style.cursor = "pointer";
-            // document.body.style.cursor = "-webkit-pointer";
-            // document.body.style.cursor = "-moz-pointer";
 
             point = new L.GeoJSON(JSON.parse(data.geometry),{
                 pointToLayer: function(feature,latlng) {
                     return new L.CircleMarker(latlng, point_style);
                 }
             }).addTo(map);
-
-            // point.cartodb_id = data.cartodb_id;
 
         }
 
