@@ -49,14 +49,14 @@
             layer.on('featureOver', function(e, pos, latlng, data) {
                 $('.leaflet-container').css('cursor','pointer')
                 if (data.cartodb_id != polygon.cartodb_id) {
-                    drawHoverPolygon(data);
+                    drawAppropriatePolygon('polygon', data);
                 }
                 cartodb.log.log(e, pos, latlng, data);
             });
 
             layer.on('featureOut', function(e, pos, latlng, data) {
                 $('.leaflet-container').css('cursor','default')
-                removePolygon();
+                removeAllHoverShapes();
             });
 
             layer.on('error', function(err) {
@@ -67,36 +67,9 @@
             cartodb.log.log("some error occurred");
         });
 
-        // Polygon variables and functions
-        var polygon = {};
-
-        // What should our hover style look like?
-        var polygon_style = {
-            color: "white",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: .45,
-            fillColor: "white",
-            clickable: false
-        }
-
-        function drawHoverPolygon(data){
-            removePolygon();
-
-            polygon = new L.GeoJSON(JSON.parse(data.geometry), {
-                style: polygon_style
-            }).addTo(map);
-            polygon.cartodb_id = data.cartodb_id;
-        }
-
-        function removePolygon(){
-            map.removeLayer(polygon);
-            polygon.cartodb_id = null;
-        }
 
 
         /* CREATE THE POINT LAYER */
-
         cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_cities_100k/viz.json', {
             // To make more simplified hover polygons (faster load time), decrease the .01
             query: 'select  *, ST_AsGeoJSON(the_geom) as geometry from {{table_name}}',
@@ -108,13 +81,13 @@
             layer.on('featureOver', function(e, pos, latlng, data) {
                 $('.leaflet-container').css('cursor','pointer')
                 if (data.cartodb_id != point.cartodb_id) {
-                    drawHoverPoint(data);
+                    drawAppropriatePolygon('point', data);
                 }
                 // cartodb.log.log(pos, data);
             });
 
             layer.on('featureOut', function(e, pos, latlng, data) {
-                $('.leaflet-container').css('cursor','default')
+                // $('.leaflet-container').css('cursor','default')
                 removePoint();
             });
 
@@ -126,8 +99,20 @@
             cartodb.log.log("some error occurred");
         });
 
-        // Point variables and functions
+
+        // Polygon variables and functions
+        var polygon = {};
         var point = {};
+
+        // What should our hover style look like?
+        var polygon_style = {
+            color: "white",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: .45,
+            fillColor: "white",
+            clickable: false
+        }
 
         // What should our hover style look like?
         var point_style = {
@@ -140,6 +125,43 @@
             clickable: false
         }
 
+        function drawAppropriatePolygon(shape, data){
+            removeAllHoverShapes();
+            if (shape == 'polygon'){
+                polygon = new L.GeoJSON(JSON.parse(data.geometry), {
+                    style: polygon_style
+                }).addTo(map);
+                polygon.cartodb_id = data.cartodb_id;
+            }else{
+                removeAllHoverShapes();
+
+                point = new L.GeoJSON(JSON.parse(data.geometry),{
+                    pointToLayer: function(feature,latlng) {
+                        return new L.CircleMarker(latlng, point_style);
+                    }
+                }).addTo(map);
+
+            }
+        }
+
+        function removeAllHoverShapes(){
+            map.removeLayer(polygon);
+            polygon.cartodb_id = null;
+
+            map.removeLayer(point);
+            point.cartodb_id = null;
+        }
+
+        function removePoint(){
+            map.removeLayer(point);
+            point.cartodb_id = null;
+
+        }
+
+
+        // Point variables and functions
+
+
         function drawHoverPoint(data){
             removePoint();
 
@@ -151,10 +173,6 @@
 
         }
 
-        function removePoint(){
-            map.removeLayer(point);
-            point.cartodb_id = null;
-        }
 
     }).call(this);
 
