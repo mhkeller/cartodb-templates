@@ -67,7 +67,8 @@
         cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_states/viz.json', {
             // To make more simplified hover polygons (faster load time), decrease the .01
             query: 'select  *, ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry from {{table_name}}',
-            interactivity: 'cartodb_id, geometry, state_name'
+            interactivity: 'cartodb_id, geometry, state_name',
+            infowindow: false
         })
             .on('done', function(layer) {
                 map.addLayer(layer);

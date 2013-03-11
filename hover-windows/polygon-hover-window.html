@@ -63,7 +63,8 @@
             // To make more simplified hover polygons (faster load time), decrease the .01
             query: 'select  *, ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry from {{table_name}}',
             // Every column that you want to show up in your hovers needs to be put in the 'interactivity' param. That way it will be accessible through data.your_column_name or data['your_column_name'] if you prefer that notation
-            interactivity: 'cartodb_id, geometry, state_name'
+            interactivity: 'cartodb_id, geometry, state_name',
+            infowindow: false
         })
             .on('done', function(layer) {
                 map.addLayer(layer);
