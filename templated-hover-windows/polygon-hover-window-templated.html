@@ -54,21 +54,27 @@
 
     (function(){
 
+        // Basic leaflet setup
         var map = L.map('map-canvas', {
             center: [38.651198,-98.920898],
             zoom: 3
         });
+        // Disable scroll on mouseWheel or two-finger trackpad scroll
         map.scrollWheelZoom.disable();
 
+        // Uses the Stamen toner styles or any custom tile layer url
+        // More Stamen tiles: http://maps.stamen.com/
         L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
             attribution: 'MapBox'
         }).addTo(map);
 
+        // Put your viz.json url here
         cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_states/viz.json', {
             // To make more simplified hover polygons (faster load time), decrease the .01
             query: 'select  *, ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry from {{table_name}}',
             // Every column that you want to show up in your hovers needs to be put in the 'interactivity' param. That way it will be accessible through data.your_column_name or data['your_column_name'] if you prefer that notation
             interactivity: 'cartodb_id, geometry, state_name',
+            // This kills the infowindow on click, we probably won't need it because we have hover windows. But you might want to bring it back in some cases.
             infowindow: false
         })
             .on('done', function(layer) {
@@ -149,7 +155,6 @@
             // What do you want to show in your hover window?
             // You need to put the column headers in the 'interactivity' param in createLayer, in this case: state_name, which is in our underscore template in the body
 
-
             var content = hover_template_factory(data)
             $hover_window.html(content)
             $hover_window.show();
@@ -159,11 +164,14 @@
             $hover_window.hide();
         }
 
+        // When the mouse exits the window, hide polygons and the hover window
         $map_canvas.mouseleave(function(e){
             hideHoverWindow();
             removePolygon();
         })
 
+        // This function constrains the hover window to the bounds of the map_canvas
+        // Adjust the xBuffer and yBuffer to make tweaks
         $map_canvas.mousemove(function(e){
             var xOffset = e.pageX
               , yOffset = e.pageY

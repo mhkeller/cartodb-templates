@@ -63,12 +63,15 @@
 
     (function(){
 
+        // Basic leaflet setup
         var map = L.map('map-canvas', {
             center: [38.651198,-98.920898],
             zoom: 3
         });
         map.scrollWheelZoom.disable();
 
+        // Uses the Stamen toner styles or any custom tile layer url
+        // More Stamen tiles: http://maps.stamen.com/
         L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
             attribution: 'MapBox'
         }).addTo(map);
@@ -84,7 +87,8 @@
                 map.addLayer(layer);
 
             layer.on('featureOver', function(e, pos, latlng, data) {
-                $('.leaflet-container').css('cursor','pointer')
+                $('.leaflet-container').css('cursor','pointer');
+                // Check to see if it's a different polygon from the one you're hovering over.
                 if (data.cartodb_id != polygon.cartodb_id) {
                     drawAppropriatePolygon('polygon', data);
                 }
@@ -233,6 +237,7 @@
         }
 
         function fillPointHoverWindow(data){
+            // Add our extender functions (optional)
             _.extend(data, formatHelpers)
             // What do you want to show in your hover window?
             // You need to put the column headers in the 'interactivity' param in createLayer, in this case, the city name: name
@@ -248,11 +253,14 @@
             $hover_window.hide();
         }
 
+        // When the mouse exits the window, hide polygons and the hover window
         $map_canvas.mouseleave(function(e){
             hideHoverWindow();
             removeAllHoverShapes();
-        })
+        });
 
+        // This function constrains the hover window to the bounds of the map_canvas
+        // Adjust the xBuffer and yBuffer to make tweaks
         $map_canvas.mousemove(function(e){
             var xOffset = e.pageX
               , yOffset = e.pageY
