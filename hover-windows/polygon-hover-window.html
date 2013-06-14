@@ -63,7 +63,7 @@
 
         // Put your viz.json url here
         cartodb.createLayer(map, 'http://zerocool.cartodb.com/api/v1/viz/us_states/viz.json', {
-            // The ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry will store a simplified GeoJSON representation of each polygon as an attribute we can pick up on hover 
+            // The ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry will store a simplified GeoJSON representation of each polygon as an attribute we can pick up on hover
             // To make more simplified hover polygons (faster load time), decrease the .01 value
             query: 'select  *, ST_AsGeoJSON(ST_Simplify(the_geom,.01)) as geometry from {{table_name}}',
             // Every column that you want to show up in your hovers needs to be put in the 'interactivity' param. That way it will be accessible through data.your_column_name or data['your_column_name'] if you prefer that notation
@@ -152,45 +152,47 @@
 
         // This function constrains the hover window to the bounds of the map_canvas
         // Adjust the xBuffer and yBuffer to make tweaks
+        function calcHoverPosition(e){
+          var xOffset = e.pageX
+          , yOffset = e.pageY
+          , xBuffer = 10
+          , yBuffer = 50
+
+          , hover_window_height = $hover_window.outerHeight()
+          , hover_window_width = $hover_window.outerWidth()
+
+          , map_canvas_height = $map_canvas.outerHeight()
+          , map_canvas_width = $map_canvas.outerWidth()
+
+          , map_canvas_offset_left = $map_canvas.offset().left
+          , map_canvas_offset_top = $map_canvas.offset().top;
+
+          $hover_window.css({
+            'top': yOffset + yBuffer,
+            'left': xOffset - hover_window_width/2
+          });
+
+          // If it goes against the left wall
+          if (xOffset < map_canvas_offset_left  + hover_window_width/2 + xBuffer){
+            $hover_window.css({
+              'left': xBuffer
+            });
+          }
+          // If it goes against the right wall
+          if(xOffset > map_canvas_width - hover_window_width/2 - xBuffer){
+            $hover_window.css({
+              'left': map_canvas_width - hover_window_width - xBuffer
+            });
+          }
+          // If it goes against the bottom
+          if(yOffset > map_canvas_height - hover_window_height - yBuffer){
+            $hover_window.css({
+              'top': yOffset - yBuffer/2 - hover_window_height
+            });
+          }
+        }
         $map_canvas.mousemove(function(e){
-            var xOffset = e.pageX
-              , yOffset = e.pageY
-              , xBuffer = 10
-              , yBuffer = 50
-
-              , hover_window_height = $hover_window.outerHeight()
-              , hover_window_width = $hover_window.outerWidth()
-
-              , map_canvas_height = $map_canvas.outerHeight()
-              , map_canvas_width = $map_canvas.outerWidth()
-
-              , map_canvas_offset_left = $map_canvas.offset().left
-              , map_canvas_offset_top = $map_canvas.offset().top;
-
-            // If it goes against the left wall
-            if (xOffset < map_canvas_offset_left  + hover_window_width/2 + xBuffer){
-              $hover_window.css({
-                'top': yOffset + yBuffer,
-                'left': xBuffer
-              });
-            }// If it goes against the right wall
-            else if(xOffset > map_canvas_width - hover_window_width/2 - xBuffer){
-              $hover_window.css({
-                'top': yOffset + yBuffer,
-                'left': map_canvas_width - hover_window_width - xBuffer
-              });
-            }// If it goes against the bottom
-            else if(yOffset > map_canvas_height - hover_window_height - yBuffer){
-              $hover_window.css({
-                'top': yOffset - yBuffer/2 - hover_window_height,
-                'left': xOffset - hover_window_width/2
-              });
-            }else{
-              $hover_window.css({
-                'top': yOffset + yBuffer,
-                'left': xOffset - hover_window_width/2
-              });
-            }
+            calcHoverPosition(e)
         });
 
 
